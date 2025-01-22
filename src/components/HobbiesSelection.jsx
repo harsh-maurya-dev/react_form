@@ -1,36 +1,11 @@
 import React, { useState } from 'react';
 
-const HobbiesSelection = ({ onHobbiesChange }) => {
+const HobbiesSelection = ({ hobbiesList, selectedHobbies, handleHobbySelect, removeHobby}) => {
     const [isOpen, setIsOpen] = useState(false);
-    const [selectedHobbies, setSelectedHobbies] = useState([]);
-
-    const hobbiesList = [
-        "Reading", "Writing", "Gaming", "Cooking", "Photography",
-        "Traveling", "Music", "Dancing", "Painting", "Sports",
-        "Gardening", "Coding", "Hiking", "Swimming", "Chess",
-        "Yoga", "Meditation", "Crafts", "Blogging", "Cycling"
-    ];
 
     const toggleDropdown = (e) => {
         e.preventDefault();
         setIsOpen(!isOpen);
-    };
-
-    const handleHobbySelect = (hobby) => {
-        let updatedHobbies;
-        if (selectedHobbies.includes(hobby)) {
-            updatedHobbies = selectedHobbies.filter(h => h !== hobby);
-        } else {
-            updatedHobbies = [...selectedHobbies, hobby];
-        }
-        setSelectedHobbies(updatedHobbies);
-        onHobbiesChange(updatedHobbies);
-    };
-
-    const removeHobby = (hobby) => {
-        const updatedHobbies = selectedHobbies.filter(h => h !== hobby);
-        setSelectedHobbies(updatedHobbies);
-        onHobbiesChange(updatedHobbies);
     };
 
     return (
@@ -42,7 +17,7 @@ const HobbiesSelection = ({ onHobbiesChange }) => {
                 <button
                     type="button"
                     onClick={toggleDropdown}
-                    className="w-full px-4 py-2 text-left bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 text-left bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 h-12"
                 >
                     <div className="flex justify-between items-center">
                         <span className="text-gray-700">

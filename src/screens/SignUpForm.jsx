@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { AiOutlineMail, AiOutlineLock } from 'react-icons/ai'
 import { FaRegEyeSlash, FaRegEye } from "react-icons/fa"
 import { CiUser } from "react-icons/ci"
@@ -6,16 +6,27 @@ import { useForm } from "react-hook-form"
 import HobbiesSelection from '../components/HobbiesSelection'
 import FileUploader from '../components/FileUploader'
 import Location from '../components/Location'
+import { useDropzone } from 'react-dropzone'
 
 const SignUpForm = () => {
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const [hobbies, setHobbies] = useState([]);
+    const [countries, setCountries] = useState([]);
+    const [states, setStates] = useState([]);
     const [location, setLocation] = useState({
-        country: null,
-        state: null,
-        city: null
+        country: "",
+        state: ""
     })
+    const hobbiesList = [
+        "Reading", "Writing", "Gaming", "Cooking", "Photography",
+        "Traveling", "Music", "Dancing", "Painting", "Sports",
+        "Gardening", "Coding", "Hiking", "Swimming", "Chess",
+        "Yoga", "Meditation", "Crafts", "Blogging", "Cycling"
+    ];
+    const [selectedHobbies, setSelectedHobbies] = useState([]);
+    const [files, setFiles] = useState([]);
+    const [error, setError] = useState("");
 
     const {
         register,
@@ -23,25 +34,135 @@ const SignUpForm = () => {
         formState: { errors },
     } = useForm()
 
-    const handleHobbiesChange = (newHobbies) => {
-        setHobbies(newHobbies);
-    };
-
     const onSubmit = (data) => {
         if (data.password === data.confirmPassword) {
-            console.log({
-                ...data,
-                "hobbies": { ...hobbies }
-            })
+            // console.log({
+            //     ...data,
+            //     "hobbies": { ...hobbies },
+            //     "location": { ...location },
+            //     "Documents": { ...files }
+            // })
             const userData = {
-                ...data, 
-                "hobbies": { ...hobbies }
+                ...data,
+                "hobbies": { ...hobbies },
+                "location": { ...location },
+                "Documents": { ...files }
+
             }
             localStorage.setItem("User_Details", JSON.stringify(userData))
         } else {
             alert("Passwords do not match")
         }
     }
+
+    const API_KEY = "NHhvOEcyWk50N2Vna3VFTE00bFp3MjFKR0ZEOUhkZlg4RTk1MlJlaA==";
+
+    // location country function
+    const handleCountryChange = async (event) => {
+        setLocation((prev) => ({ ...prev, country: event.target.value }))
+        const selected = countries.find(
+            (country) => country.name === event.target.value
+        );
+        const headers = new Headers();
+        headers.append("X-CSCAPI-KEY", API_KEY);
+
+        const requestOptions = {
+            method: "GET",
+            headers: headers,
+            redirect: "follow",
+        };
+        try {
+            const response = await fetch(`https://api.countrystatecity.in/v1/countries/${selected?.iso2}/states`, requestOptions);
+            const data = await response.json()
+            setStates(data)
+        } catch (err) {
+            setError(err.message);
+            console.error(err);
+        }
+    }
+
+    const fetchCountries = async () => {
+        const headers = new Headers();
+        headers.append("X-CSCAPI-KEY", API_KEY);
+
+        const requestOptions = {
+            method: "GET",
+            headers: headers,
+            redirect: "follow",
+        };
+        try {
+            const response = await fetch(
+                `https://api.countrystatecity.in/v1/countries`,
+                requestOptions
+            );
+            const data = await response.json();
+            setCountries(data);
+        } catch (err) {
+            setError(err.message);
+            console.error(err);
+        }
+    };
+
+    const handleStateChange = async (event) => {
+        setLocation((prev) => ({ ...prev, state: event.target.value }))
+    }
+
+    // Hobbies functions
+    const handleHobbiesChange = (newHobbies) => {
+        setHobbies(newHobbies);
+    };
+
+    const handleHobbySelect = (hobby) => {
+        let updatedHobbies;
+        if (selectedHobbies.includes(hobby)) {
+            updatedHobbies = selectedHobbies.filter(h => h !== hobby);
+        } else {
+            updatedHobbies = [...selectedHobbies, hobby];
+        }
+        setSelectedHobbies(updatedHobbies);
+        handleHobbiesChange(updatedHobbies);
+    };
+
+    const removeHobby = (hobby) => {
+        const updatedHobbies = selectedHobbies.filter(h => h !== hobby);
+        setSelectedHobbies(updatedHobbies);
+        handleHobbiesChange(updatedHobbies);
+    };
+
+    // FileUploader function
+    const onDrop = useCallback((acceptedFiles) => {
+        setError("")
+        setFiles((prevFiles) => [...prevFiles, ...acceptedFiles.map(file => Object.assign(file, {
+            preview: URL.createObjectURL(file)
+        }))]);
+    }, []);
+
+    const onDropRejected = useCallback((fileRejections) => {
+        const errorMessage = fileRejections
+        if (errorMessage) {
+            setError("*Max size should be: 2MB")
+        }
+    }, []);
+
+    const removeFile = (fileRemove) => {
+        setFiles((prevFiles) => prevFiles.filter((file) => file.name !== fileRemove.name))
+    }
+
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({
+        onDrop,
+        onDropRejected,
+        maxSize: 2 * 1024 * 1024,
+        multiple: true,
+        accept: {
+            "image/*": [".jpeg", ".jpg", ".png", ".gif"],
+            "application/pdf": [".pdf"],
+        },
+    });
+
+    useEffect(() => {
+        fetchCountries();
+    }, []);
+
 
     return (
         <div className='bg-[#171717] py-6 md:p-10 flex justify-center items-center'>
@@ -127,11 +248,29 @@ const SignUpForm = () => {
                 </div>
 
                 {/* Location */}
-                <Location />
+                <Location
+                    countries={countries}
+                    states={states}
+                    location={location}
+                    handleCountryChange={handleCountryChange}
+                    handleStateChange={handleStateChange}
+                />
                 {/* Categories */}
-                <HobbiesSelection onHobbiesChange={handleHobbiesChange} />
+                <HobbiesSelection
+                    hobbiesList={hobbiesList}
+                    selectedHobbies={selectedHobbies}
+                    handleHobbySelect={handleHobbySelect}
+                    removeHobby={removeHobby} />
                 {/* Drag and drop */}
-                <FileUploader />
+                <FileUploader
+                    files={files}
+                    setFiles={setFiles}
+                    removeFile={removeFile}
+                    getRootProps={getRootProps}
+                    getInputProps={getInputProps}
+                    isDragActive={isDragActive}
+                    error={error}
+                />
 
                 {/* Terms and Conditions */}
                 <div className="flex text-sm flex-col">
