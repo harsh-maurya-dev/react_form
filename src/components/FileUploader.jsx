@@ -1,40 +1,7 @@
-import React, { useCallback, useState } from "react";
-import { useDropzone } from "react-dropzone";
+import React from "react";
 import { AiOutlineCloudUpload, AiOutlineClose } from 'react-icons/ai'
 
-const FileUploader = () => {
-    const [files, setFiles] = useState([]);
-    const [error, setError] = useState("");
-
-    const onDrop = useCallback((acceptedFiles) => {
-        setError("")
-        setFiles((prevFiles) => [...prevFiles, ...acceptedFiles.map(file => Object.assign(file, {
-            preview: URL.createObjectURL(file)
-        }))]);
-    }, []);
-
-    const onDropRejected = useCallback((fileRejections) => {
-        const errorMessage = fileRejections
-        if (errorMessage) {
-            setError("*Max size should be: 2MB")
-        }
-    }, []);
-
-    const removeFile = (fileRemove) => {
-        setFiles((prevFiles) => prevFiles.filter((file) => file.name !== fileRemove.name))
-
-    }
-
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({
-        onDrop,
-        onDropRejected,
-        maxSize: 2 * 1024 * 1024,
-        multiple: true,
-        accept: {
-            "image/*": [".jpeg", ".jpg", ".png", ".gif"],
-            "application/pdf": [".pdf"],
-        },
-    });
+const FileUploader = ({files, removeFile, getInputProps, getRootProps, isDragActive, error}) => {
 
     return (
         <div className="w-full bg-white rounded-md">
