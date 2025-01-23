@@ -14,9 +14,16 @@ const SignUpForm = () => {
     const [hobbies, setHobbies] = useState([]);
     const [countries, setCountries] = useState([]);
     const [states, setStates] = useState([]);
+    // const [cities, setCities] = useState([]);
+    const [iso2, setIso2] = useState({
+        countryIso:"",
+        stateIso:"",
+        cityIso:""
+    })
     const [location, setLocation] = useState({
         country: "",
-        state: ""
+        state: "",
+        city:""
     })
     const hobbiesList = [
         "Reading", "Writing", "Gaming", "Cooking", "Photography",
@@ -31,29 +38,8 @@ const SignUpForm = () => {
     const {
         register,
         handleSubmit,
-        formState: { errors },
+        formState: { errors, isSubmitted },
     } = useForm()
-
-    const onSubmit = (data) => {
-        if (data.password === data.confirmPassword) {
-            // console.log({
-            //     ...data,
-            //     "hobbies": { ...hobbies },
-            //     "location": { ...location },
-            //     "Documents": { ...files }
-            // })
-            const userData = {
-                ...data,
-                "hobbies": { ...hobbies },
-                "location": { ...location },
-                "Documents": { ...files }
-
-            }
-            localStorage.setItem("User_Details", JSON.stringify(userData))
-        } else {
-            alert("Passwords do not match")
-        }
-    }
 
     const API_KEY = "NHhvOEcyWk50N2Vna3VFTE00bFp3MjFKR0ZEOUhkZlg4RTk1MlJlaA==";
 
@@ -63,6 +49,10 @@ const SignUpForm = () => {
         const selected = countries.find(
             (country) => country.name === event.target.value
         );
+        if(!selected){
+
+        }
+        setIso2((prev)=>({...prev, countryIso:selected.iso2}))
         const headers = new Headers();
         headers.append("X-CSCAPI-KEY", API_KEY);
 
@@ -80,6 +70,7 @@ const SignUpForm = () => {
             console.error(err);
         }
     }
+    
 
     const fetchCountries = async () => {
         const headers = new Headers();
@@ -96,15 +87,50 @@ const SignUpForm = () => {
                 requestOptions
             );
             const data = await response.json();
+            // console.log("api call");
             setCountries(data);
+            setStates([])
         } catch (err) {
             setError(err.message);
             console.error(err);
         }
     };
 
+    
+
     const handleStateChange = async (event) => {
         setLocation((prev) => ({ ...prev, state: event.target.value }))
+    //     const selected = states.find(
+    //         (state) => state.name === event.target.value
+    //     );
+    //     setIso2((prev)=>({...prev, stateIso:selected.iso2}))
+    //     const headers = new Headers();
+    //     headers.append("X-CSCAPI-KEY", API_KEY);
+
+    //     const requestOptions = {
+    //         method: "GET",
+    //         headers: headers,
+    //         redirect: "follow",
+    //     };
+    //     try {
+    //         const response = await fetch(`https://api.countrystatecity.in/v1/countries/${iso2.countryIso}/states/${iso2.stateIso}/cities`, requestOptions);
+    //         // const response = await fetch(`https://api.countrystatecity.in/v1/countries/IN/states/MH/cities`, requestOptions);
+    //         const data = await response.json()
+    //         setCities(data)
+    //         console.log(cities);
+            
+    //         // console.log("selected state",selected, "selected country",selectedC);
+            
+    //     } catch (err) {
+    //         setError(err.message);
+    //         console.error(err);
+    //     }
+    // }
+    // console.log("city iso:",iso2.stateIso);
+
+
+    // const handleCityChange = async (event)=>{
+    //     setLocation((prev) => ({ ...prev, city: event.target.value })) 
     }
 
     // Hobbies functions
@@ -132,6 +158,12 @@ const SignUpForm = () => {
     // FileUploader function
     const onDrop = useCallback((acceptedFiles) => {
         setError("")
+        console.log("file");
+        
+        if (acceptedFiles === "") {
+            console.log("Please enter any file");
+            
+        }
         setFiles((prevFiles) => [...prevFiles, ...acceptedFiles.map(file => Object.assign(file, {
             preview: URL.createObjectURL(file)
         }))]);
@@ -158,6 +190,33 @@ const SignUpForm = () => {
             "application/pdf": [".pdf"],
         },
     });
+
+    const onSubmit = (data) => {
+        if (data.password === data.confirmPassword) {
+            console.log({
+                ...data,
+                "hobbies": { ...hobbies },
+                "location": { ...location },
+                "Documents": { ...files }
+            })
+            console.log(isSubmitted);
+            
+            // const userData = {
+            //     ...data,
+            //     "hobbies": { ...hobbies },
+            //     "location": { ...location },
+            //     "Documents": { ...files }
+            // }
+            localStorage.setItem("User_Details", JSON.stringify(userData))
+            console.log(errors);
+            
+        } else {
+            alert("Passwords do not match")
+        }
+    }
+    // console.log("outside", isSubmitted);
+
+    setTimeout(()=>{onSubmit, {isSubmitted: false}}, 3000)
 
     useEffect(() => {
         fetchCountries();
@@ -251,9 +310,11 @@ const SignUpForm = () => {
                 <Location
                     countries={countries}
                     states={states}
+                    // cities={cities}
                     location={location}
                     handleCountryChange={handleCountryChange}
                     handleStateChange={handleStateChange}
+                    // handleCityChange={handleCityChange}
                 />
                 {/* Categories */}
                 <HobbiesSelection
@@ -295,11 +356,11 @@ const SignUpForm = () => {
                     className="mt-4 mb-2 bg-black text-white font-medium rounded-lg h-12 w-full"
                     type="submit"
                 >
-                    Sign Up
+                    Submit
                 </button>
             </form>
         </div>
     )
 }
 
-export default SignUpForm
+export default SignUpForm;
